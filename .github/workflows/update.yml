@@ -1,0 +1,47 @@
+name: Update
+
+# 内閣府の祝日 CSV を取得し、syukujitsu.csv と holidays.json を main にコミットする。
+# GitHub Pages は main のルートから配信するので、コミットすればそのまま公開される。
+# 翌年の祝日は毎年 2 月に掲載されるので、3 月 1 日 9:00（JST）に動かす。
+# 取得の手順を変えたとき（scripts/ やこのファイルを main に入れたとき）にも動かし、手で動かすこともできる。
+on:
+  schedule:
+    - cron: "0 0 1 3 *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - ".github/workflows/update.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update
+
+jobs:
+  update:
+    name: Update holidays
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jdx/mise-action@v5
+
+      - name: Test
+        run: npm test
+
+      - name: Fetch the CSV
+        run: npm run update
+
+      - name: Commit
+        run: |
+          git add syukujitsu.csv holidays.json
+          if git diff --cached --quiet; then
+            echo "祝日データに変わりはありません"
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "chore: 祝日データを更新する"
+          git push origin HEAD:main

@@ -1,0 +1,11 @@
+{
+  "name": "jp-holidays",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "update": "node scripts/update.mjs",
+    "test": "node --test scripts/*.test.mjs"
+  }
+}
